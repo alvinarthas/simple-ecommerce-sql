@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetCustomer to view all customers
-func GetCustomer(c *gin.Context) {
-	items := []models.Customer{}
+// GetUser to view all customers
+func GetUser(c *gin.Context) {
+	items := []models.User{}
 	if config.DB.Find(&items).RecordNotFound() {
 		c.JSON(404, gin.H{
 			"status":  "error",
@@ -23,29 +23,12 @@ func GetCustomer(c *gin.Context) {
 	})
 }
 
-// PostCustomer to store the new customer data into DB
-func PostCustomer(c *gin.Context) {
-	// Get Form
-	item := models.Customer{
-		UserName: c.PostForm("user_name"),
-		FullName: c.PostForm("full_name"),
-		Email:    c.PostForm("email"),
-	}
-
-	config.DB.Create(&item)
-
-	c.JSON(200, gin.H{
-		"status": "berhasil store data customer",
-		"data":   item,
-	})
-}
-
-// GetCustomerByID to get the customer data based on the username
-func GetCustomerByID(c *gin.Context) {
+// GetUserByID to get the user data based on the user id
+func GetUserByID(c *gin.Context) {
 	// Get Parameter
 	id := c.Param("id")
 
-	item := []models.Customer{}
+	item := []models.User{}
 
 	if config.DB.First(&item, "id = ?", id).RecordNotFound() || len(item) == 0 {
 		c.JSON(404, gin.H{

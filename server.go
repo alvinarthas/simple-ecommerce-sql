@@ -4,12 +4,14 @@ import (
 	"github.com/alvinarthas/simple-ecommerce-sql/config"
 	"github.com/alvinarthas/simple-ecommerce-sql/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/subosito/gotenv"
 )
 
 func main() {
 	// set up database
 	config.InitDB()
 	defer config.DB.Close()
+	gotenv.Load()
 
 	//  Setting Default Router
 	router := gin.Default()
@@ -17,15 +19,16 @@ func main() {
 	// Initialize Version
 	apiV1 := router.Group("/api/v1/")
 	{
-		// Customers
-		customers := apiV1.Group("/customers")
+		// Normal Register and Login
+		apiV1.POST("/register", routes.RegisterUser)
+		apiV1.POST("/login", routes.LoginUser)
+
+		// Users
+		users := apiV1.Group("/users")
 		{
-			// Initilize Http method for Customers Crud
-			customers.GET("/", routes.GetCustomer)
-			customers.GET("/:id", routes.GetCustomerByID)
-			customers.POST("/store", routes.PostCustomer)
-			// customers.PUT("/update/:id", middleware.IsAuth(), routes.UpdateCustomer)
-			// customers.DELETE("/delete/:id", middleware.IsAuth(), routes.DeleteCustomer)
+			// Initilize Http method for Users Crud
+			users.GET("/", routes.GetUser)
+			users.GET("/:id", routes.GetUserByID)
 		}
 	}
 

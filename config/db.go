@@ -25,14 +25,14 @@ func InitDB() {
 
 	// Migrate the Database
 
-	// Customer
-	DB.AutoMigrate(&models.Customer{})
+	// User
+	DB.AutoMigrate(&models.User{})
 	// Category
 	DB.AutoMigrate(&models.Category{})
 	// Store
-	DB.AutoMigrate(&models.Store{}).AddForeignKey("customer_id", "customers(id)", "CASCADE", "CASCADE")
+	DB.AutoMigrate(&models.Store{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
 
 	// Related
-	DB.Model(&models.Customer{}).Related(&models.Store{})
+	DB.Model(&models.User{}).Related(&models.Store{})
 
 }
