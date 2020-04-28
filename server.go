@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/alvinarthas/simple-ecommerce-sql/config"
+	"github.com/alvinarthas/simple-ecommerce-sql/middleware"
 	"github.com/alvinarthas/simple-ecommerce-sql/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/subosito/gotenv"
@@ -19,16 +20,26 @@ func main() {
 	// Initialize Version
 	apiV1 := router.Group("/api/v1/")
 	{
+		// Social Auth or OAuth
+		apiV1.GET("/auth/:provider", routes.RedirectHandler)
+		apiV1.GET("/auth/:provider/callback", routes.CallbackHandler)
+
 		// Normal Register and Login
 		apiV1.POST("/register", routes.RegisterUser)
 		apiV1.POST("/login", routes.LoginUser)
 
-		// Users
-		users := apiV1.Group("/users")
+		// User
+		user := apiV1.Group("/user")
 		{
-			// Initilize Http method for Users Crud
-			users.GET("/", routes.GetUser)
-			users.GET("/:id", routes.GetUserByID)
+			// Initilize Http method for User Crud
+			user.GET("/", routes.GetUser)
+			user.GET("/:id", routes.GetUserByID)
+		}
+
+		// Store
+		store := apiV1.Group("/store")
+		{
+			store.POST("/register", middleware.IsAuth(), routes.RegisterStore)
 		}
 	}
 
