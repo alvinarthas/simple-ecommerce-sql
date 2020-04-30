@@ -16,15 +16,17 @@ func RegisterStore(c *gin.Context) {
 
 	// Get User ID from Authorization token
 	userID := uint(c.MustGet("jwt_user_id").(float64))
+	token, _ := RandomToken()
 
 	// Get Form
 	item := models.Store{
-		Name:     c.PostForm("name"),
-		UserName: c.PostForm("user_name"),
-		Adress:   c.PostForm("address"),
-		Email:    c.PostForm("email"),
-		Phone:    c.PostForm("phone"),
-		UserID:   userID,
+		Name:              c.PostForm("name"),
+		UserName:          c.PostForm("user_name"),
+		Adress:            c.PostForm("adress"),
+		Email:             c.PostForm("email"),
+		Phone:             c.PostForm("phone"),
+		VerificationToken: token,
+		UserID:            userID,
 	}
 
 	if err := config.DB.Create(&item).Error; err != nil {
@@ -34,4 +36,11 @@ func RegisterStore(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
+	// I want to send email for activation
+
+	c.JSON(200, gin.H{
+		"status": "successfuly register user, please check your email",
+		"data":   item,
+	})
 }

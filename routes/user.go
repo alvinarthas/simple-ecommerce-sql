@@ -28,9 +28,9 @@ func GetUserByID(c *gin.Context) {
 	// Get Parameter
 	id := c.Param("id")
 
-	item := []models.User{}
+	var item models.User
 
-	if config.DB.First(&item, "id = ?", id).RecordNotFound() || len(item) == 0 {
+	if config.DB.First(&item, "id = ?", id).RecordNotFound() {
 		c.JSON(404, gin.H{
 			"status":  "error",
 			"message": "record not found"})

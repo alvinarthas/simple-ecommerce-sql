@@ -18,6 +18,7 @@ func RegisterUser(c *gin.Context) {
 	// Check Password confirmation
 	password := c.PostForm("password")
 	confirmedPassword := c.PostForm("confirmed_password")
+	token, _ := RandomToken()
 
 	// Return Error if not confirmed
 	if password != confirmedPassword {
@@ -33,10 +34,11 @@ func RegisterUser(c *gin.Context) {
 
 	// Get Form
 	item := models.User{
-		UserName: c.PostForm("user_name"),
-		FullName: c.PostForm("full_name"),
-		Email:    c.PostForm("email"),
-		Password: hash,
+		UserName:          c.PostForm("user_name"),
+		FullName:          c.PostForm("full_name"),
+		Email:             c.PostForm("email"),
+		Password:          hash,
+		VerificationToken: token,
 	}
 
 	if err := config.DB.Create(&item).Error; err != nil {
@@ -158,13 +160,16 @@ func getOrRegisterUser(provider string, user *structs.User) models.User {
 	config.DB.Where("provider = ? AND social_id = ?", provider, user.ID).First(&userData)
 
 	if userData.ID == 0 {
+		token, _ := RandomToken()
+
 		newUser := models.User{
-			FullName: user.FullName,
-			UserName: user.Username,
-			Email:    user.Email,
-			SocialID: user.ID,
-			Provider: provider,
-			Avatar:   user.Avatar,
+			FullName:          user.FullName,
+			UserName:          user.Username,
+			Email:             user.Email,
+			SocialID:          user.ID,
+			Provider:          provider,
+			Avatar:            user.Avatar,
+			VerificationToken: token,
 		}
 
 		config.DB.Create(&newUser)
@@ -194,4 +199,68 @@ func createToken(user *models.User) string {
 	}
 
 	return tokenString
+}
+
+// VerifyUserAccount to verify user and store account
+func VerifyUserAccount(c *gin.Context) {
+
+	verificationToken := c.Param("token")
+
+	var item models.User
+
+	if config.DB.First(&item, "verification_token = ?", verificationToken).RecordNotFound() {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "record not found"})
+		c.Abort()
+		return
+	}
+
+	config.DB.Model(&item).Where("id = ?", item.ID).Updates(models.User{
+		IsActivate: true,
+	})
+
+	c.JSON(200, gin.H{
+		"status": "Success, your account is now active. Please Login to your account",
+		"data":   item,
+	})
+}
+
+// VerifyStoreAccount to verify user and store account
+func VerifyStoreAccount(c *gin.Context) {
+
+	verificationToken := c.Param("token")
+
+	var itemUser models.User
+	var itemStore models.Store
+
+	if config.DB.First(&itemStore, "verification_token = ?", verificationToken).RecordNotFound() {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "record not found"})
+		c.Abort()
+		return
+	}
+
+	if config.DB.First(&itemUser, "id = ?", itemStore.UserID).RecordNotFound() {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "user record not found"})
+		c.Abort()
+		return
+	}
+
+	config.DB.Model(&itemUser).Where("id = ?", itemUser.ID).Updates(models.User{
+		IsActivate: true,
+		HaveStore:  true,
+	})
+
+	config.DB.Model(&itemStore).Where("id = ?", itemStore.ID).Updates(models.Store{
+		IsActivate: true,
+	})
+
+	c.JSON(200, gin.H{
+		"status": "Success, your account is now active. Please Login to your account",
+	})
+
 }

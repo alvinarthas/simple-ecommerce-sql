@@ -10,11 +10,13 @@ User can have more than one stores
 // Store model
 type Store struct {
 	gorm.Model
-	Name     string
-	UserName string
-	Adress   string
-	Email    string
-	Phone    string
-	Avatar   string
-	UserID   uint
+	Name              string
+	UserName          string
+	Adress            string
+	Email             string
+	Phone             string
+	Avatar            string
+	IsActivate        bool `gorm:"default:0"`
+	VerificationToken string
+	UserID            uint
 }
