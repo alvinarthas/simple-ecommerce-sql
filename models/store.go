@@ -10,6 +10,7 @@ User can have more than one stores
 // Store model
 type Store struct {
 	gorm.Model
+	Products          []Product // to show that store can have many products
 	Name              string
 	UserName          string
 	Adress            string

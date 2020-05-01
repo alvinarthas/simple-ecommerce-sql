@@ -44,6 +44,15 @@ func main() {
 		store := apiV1.Group("/store")
 		{
 			store.POST("/register", middleware.IsAuth(), routes.RegisterStore)
+
+			// Product CRUD by Store
+			product := store.Group("/product")
+			{
+				product.GET("/:id", middleware.HaveStore(), routes.GetProduct)
+				product.POST("/create", middleware.HaveStore(), routes.CreateProduct)
+				product.PUT("/update/:id", middleware.HaveStore(), routes.UpdateProduct)
+				product.PUT("/delete/:id", middleware.HaveStore(), routes.DeleteProduct)
+			}
 		}
 	}
 
