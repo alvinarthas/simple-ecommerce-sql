@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"strconv"
+
 	"github.com/alvinarthas/simple-ecommerce-sql/config"
 	"github.com/alvinarthas/simple-ecommerce-sql/models"
 	"github.com/gin-gonic/gin"
@@ -38,6 +40,39 @@ func GetProduct(c *gin.Context) {
 
 // CreateProduct is to create new product -> Store
 func CreateProduct(c *gin.Context) {
+	// Get Store ID from Authorization token
+	storeID := uint(c.MustGet("jwt_store_id").(float64))
+
+	// set Parameter POST
+	price, _ := strconv.Atoi(c.PostForm("price"))
+	stock, _ := strconv.Atoi(c.PostForm("stock"))
+	weight, _ := strconv.Atoi(c.PostForm("weight"))
+	condition, _ := strconv.ParseBool(c.PostForm("condition"))
+	// category, err := strconv.ParseUint(c.PostForm("category"), 10, 32)
+	// Get Form
+	item := models.Product{
+		Name:         c.PostForm("name"),
+		Description:  c.PostForm("description"),
+		Price:        price,
+		Condition:    condition,
+		InitialStock: stock,
+		Weight:       weight,
+		StoreID:      storeID,
+		// CategoryID:   category,
+	}
+
+	if err := config.DB.Create(&item).Error; err != nil {
+		c.JSON(500, gin.H{
+			"status":  "error",
+			"message": err})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status": "successfuly register user, please check your email",
+		"data":   item,
+	})
 }
 
 // UpdateProduct is to update existing product -> Store

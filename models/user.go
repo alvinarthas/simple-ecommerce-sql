@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 // User is model for the customer
 type User struct {
 	gorm.Model
-	Stores            []Store // to show that customer can have many stores
+	Store             Store // to show that customer can have one store
 	UserName          string
 	FullName          string
 	Email             string `gorm:"unique_index"`

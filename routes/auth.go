@@ -182,11 +182,23 @@ func getOrRegisterUser(provider string, user *structs.User) models.User {
 
 // CreateToken to generate token for accesing the system
 func createToken(user *models.User) string {
+	var store models.Store
+	var storeID uint
+
+	if user.HaveStore == true {
+		if config.DB.First(&store, "user_id = ?", user.ID).RecordNotFound() {
+			storeID = 0
+		}
+		storeID = store.ID
+	} else {
+		storeID = 0
+	}
 	// to send time expire, issue at (iat)
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    user.ID,
 		"user_role":  user.Role,
 		"user_store": user.HaveStore,
+		"store_id":   storeID,
 		"exp":        time.Now().AddDate(0, 0, 7).Unix(),
 		"iat":        time.Now().Unix(),
 	})

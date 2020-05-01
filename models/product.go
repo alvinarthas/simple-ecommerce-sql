@@ -13,8 +13,8 @@ One Product can only have one Categories
 type Product struct {
 	gorm.Model
 	Name         string
-	Description  string
-	Condition    string
+	Description  string `sql:"type:text;"`
+	Condition    bool   `gorm:"default:0"`
 	Price        int
 	InitialStock int
 	Weight       int

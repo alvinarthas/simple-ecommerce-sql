@@ -49,6 +49,8 @@ func checkJWT(middlewareAdmin bool, checkStore bool) gin.HandlerFunc {
 				userRole := bool(claims["user_role"].(bool))
 				userStore := bool(claims["user_store"].(bool))
 				c.Set("jwt_user_id", claims["user_id"])
+				c.Set("jwt_user_store", claims["user_store"])
+				c.Set("jwt_store_id", claims["store_id"])
 
 				if middlewareAdmin == true && userRole == false {
 					c.JSON(403, gin.H{
