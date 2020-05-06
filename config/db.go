@@ -31,8 +31,12 @@ func InitDB() {
 	DB.AutoMigrate(&models.Category{})
 	// Store
 	DB.AutoMigrate(&models.Store{}).AddForeignKey("user_id", "users(id)", "CASCADE", "CASCADE")
+	// Product
+	DB.AutoMigrate(&models.Product{}).AddForeignKey("store_id", "stores(id)", "CASCADE", "CASCADE").AddForeignKey("category_id", "categories(id)", "CASCADE", "CASCADE")
 
 	// Related
 	DB.Model(&models.User{}).Related(&models.Store{})
+	DB.Model(&models.Store{}).Related(&models.Product{})
+	DB.Model(&models.Category{}).Related(&models.Product{})
 
 }

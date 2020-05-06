@@ -66,7 +66,7 @@ func LoginUser(c *gin.Context) {
 	item := models.User{}
 
 	// Check if email and password is match
-	if !config.DB.First(&item, "email = ? AND is_active", email, 0).RecordNotFound() && CheckPasswordHash(password, item.Password) {
+	if !config.DB.First(&item, "email = ? AND is_activate = ?", email, 1).RecordNotFound() && CheckPasswordHash(password, item.Password) {
 		token := createToken(&item)
 
 		c.JSON(200, gin.H{

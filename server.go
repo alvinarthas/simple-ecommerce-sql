@@ -51,9 +51,15 @@ func main() {
 				product.GET("/:id", middleware.HaveStore(), routes.GetProduct)
 				product.POST("/create", middleware.HaveStore(), routes.CreateProduct)
 				product.PUT("/update/:id", middleware.HaveStore(), routes.UpdateProduct)
-				product.PUT("/delete/:id", middleware.HaveStore(), routes.DeleteProduct)
+				product.DELETE("/delete/:id", middleware.HaveStore(), routes.DeleteProduct)
 			}
+
+			// Other
+			store.GET("/products", middleware.HaveStore(), routes.GetStoreProducts)
 		}
+
+		// Other
+		apiV1.GET("/products", routes.GetAllProducts)
 	}
 
 	router.Run()
