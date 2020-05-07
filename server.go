@@ -40,6 +40,16 @@ func main() {
 			user.GET("/:id", routes.GetUserByID)
 		}
 
+		// Category
+		category := apiV1.Group("/category")
+		{
+			// Initilize Http method for Category Crud
+			category.GET("/:id", middleware.IsAdmin(), routes.GetCategory)
+			category.POST("/create", middleware.IsAdmin(), routes.CreateCategory)
+			category.PUT("/update/:id", middleware.IsAdmin(), routes.UpdateCategory)
+			category.DELETE("/delete/:id", middleware.IsAdmin(), routes.DeleteCategory)
+		}
+
 		// Store
 		store := apiV1.Group("/store")
 		{
@@ -48,18 +58,19 @@ func main() {
 			// Product CRUD by Store
 			product := store.Group("/product")
 			{
-				product.GET("/:id", middleware.HaveStore(), routes.GetProduct)
+				product.GET("/:id", routes.GetProduct)
 				product.POST("/create", middleware.HaveStore(), routes.CreateProduct)
 				product.PUT("/update/:id", middleware.HaveStore(), routes.UpdateProduct)
 				product.DELETE("/delete/:id", middleware.HaveStore(), routes.DeleteProduct)
 			}
 
 			// Other
-			store.GET("/products", middleware.HaveStore(), routes.GetStoreProducts)
+			store.GET("/products", routes.GetStoreProducts)
 		}
 
 		// Other
 		apiV1.GET("/products", routes.GetAllProducts)
+		apiV1.GET("/categories", routes.GetAllCategories)
 	}
 
 	router.Run()
