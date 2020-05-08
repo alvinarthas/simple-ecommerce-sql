@@ -44,6 +44,7 @@ func main() {
 		category := apiV1.Group("/category")
 		{
 			// Initilize Http method for Category Crud
+			category.GET("/", routes.GetAllCategories)
 			category.GET("/:id", middleware.IsAdmin(), routes.GetCategory)
 			category.POST("/create", middleware.IsAdmin(), routes.CreateCategory)
 			category.PUT("/update/:id", middleware.IsAdmin(), routes.UpdateCategory)
@@ -54,23 +55,19 @@ func main() {
 		store := apiV1.Group("/store")
 		{
 			store.POST("/register", middleware.IsAuth(), routes.RegisterStore)
-
-			// Product CRUD by Store
-			product := store.Group("/product")
-			{
-				product.GET("/:id", routes.GetProduct)
-				product.POST("/create", middleware.HaveStore(), routes.CreateProduct)
-				product.PUT("/update/:id", middleware.HaveStore(), routes.UpdateProduct)
-				product.DELETE("/delete/:id", middleware.HaveStore(), routes.DeleteProduct)
-			}
-
-			// Other
-			store.GET("/products", routes.GetStoreProducts)
+			store.GET("/:username", routes.GetStore)                               //show all store products
+			store.GET("/:username/info", middleware.HaveStore(), routes.InfoStore) // Account Info
 		}
 
-		// Other
-		apiV1.GET("/products", routes.GetAllProducts)
-		apiV1.GET("/categories", routes.GetAllCategories)
+		// Product CRUD by Store
+		product := apiV1.Group("/product")
+		{
+			product.GET("/", routes.GetAllProducts) // every product in every store
+			product.GET("/:id", routes.GetProduct)
+			product.POST("/create", middleware.HaveStore(), routes.CreateProduct)
+			product.PUT("/update/:id", middleware.HaveStore(), routes.UpdateProduct)
+			product.DELETE("/delete/:id", middleware.HaveStore(), routes.DeleteProduct)
+		}
 	}
 
 	router.Run()

@@ -44,3 +44,55 @@ func RegisterStore(c *gin.Context) {
 		"data":   item,
 	})
 }
+
+// GetStore to gett all products that the store have
+func GetStore(c *gin.Context) {
+	// Get Store ID from Authorization token
+	storeUsername := c.Param("username")
+
+	var itemStore models.Store
+
+	if config.DB.First(&itemStore, "user_name = ? AND is_activate = ?", storeUsername, 1).RecordNotFound() {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "record not found"})
+		c.Abort()
+		return
+	}
+
+	items := []models.Product{}
+
+	if config.DB.Find(&items, "store_id = ?", itemStore.ID).RecordNotFound() {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "record not found"})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status": "berhasil",
+		"data":   items,
+	})
+}
+
+// InfoStore to get store account info
+func InfoStore(c *gin.Context) {
+	// Get Store ID from Authorization token
+	storeUsername := c.Param("username")
+
+	var itemStore models.Store
+
+	if config.DB.First(&itemStore, "user_name = ? AND is_activate = ?", storeUsername, 1).RecordNotFound() {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "record not found"})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status": "berhasil",
+		"data":   itemStore,
+	})
+}

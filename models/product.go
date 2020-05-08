@@ -13,6 +13,7 @@ One Product can only have one Categories
 type Product struct {
 	gorm.Model
 	Name         string
+	Slug         string `gorm:"unique_index"`
 	Description  string `sql:"type:text;"`
 	Condition    bool   `gorm:"default:0"`
 	Price        int

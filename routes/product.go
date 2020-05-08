@@ -2,10 +2,12 @@ package routes
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/alvinarthas/simple-ecommerce-sql/config"
 	"github.com/alvinarthas/simple-ecommerce-sql/models"
 	"github.com/gin-gonic/gin"
+	"github.com/gosimple/slug"
 )
 
 /*
@@ -26,27 +28,6 @@ func GetAllProducts(c *gin.Context) {
 	})
 }
 
-// GetStoreProducts to gett all products that the store have
-func GetStoreProducts(c *gin.Context) {
-	// Get Store ID from Authorization token
-	storeID := uint(c.MustGet("jwt_store_id").(float64))
-
-	items := []models.Product{}
-
-	if config.DB.Find(&items, "store_id = ?", storeID).RecordNotFound() {
-		c.JSON(404, gin.H{
-			"status":  "error",
-			"message": "record not found"})
-		c.Abort()
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"status": "berhasil",
-		"data":   items,
-	})
-}
-
 // GetProduct is to get spesific product -> Store
 func GetProduct(c *gin.Context) {
 	// Get Parameter
@@ -54,7 +35,7 @@ func GetProduct(c *gin.Context) {
 
 	var item models.Product
 
-	if config.DB.First(&item, "id = ?", id).RecordNotFound() {
+	if config.DB.First(&item, "slug = ?", id).RecordNotFound() {
 		c.JSON(404, gin.H{
 			"status":  "error",
 			"message": "record not found"})
@@ -73,6 +54,20 @@ func CreateProduct(c *gin.Context) {
 	// Get Store ID from Authorization token
 	storeID := uint(c.MustGet("jwt_store_id").(float64))
 
+	/* Check and make slug
+	Initialize Model */
+	oldItem := []models.Product{}
+
+	// Get Parameter
+	slug := slug.Make(c.PostForm("name"))
+
+	// Do Query
+	config.DB.First(&oldItem, "slug = ?", slug)
+
+	if len(oldItem) >= 1 {
+		slug = slug + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
+
 	// set Parameter POST
 	price, _ := strconv.Atoi(c.PostForm("price"))
 	stock, _ := strconv.Atoi(c.PostForm("stock"))
@@ -86,6 +81,7 @@ func CreateProduct(c *gin.Context) {
 	// Get Form
 	item := models.Product{
 		Name:         c.PostForm("name"),
+		Slug:         slug,
 		Description:  c.PostForm("description"),
 		Price:        price,
 		Condition:    condition,
@@ -123,6 +119,7 @@ func UpdateProduct(c *gin.Context) {
 		return
 	}
 
+	// To make sure, it is the right store account who do the update
 	storeID := uint(c.MustGet("jwt_store_id").(float64))
 	if storeID != item.StoreID {
 		c.JSON(403, gin.H{
@@ -142,16 +139,48 @@ func UpdateProduct(c *gin.Context) {
 	// change category to uint
 	category := uint(categoryRaw)
 
-	config.DB.Model(&item).Where("id = ?", id).Updates(models.Product{
-		Name:         c.PostForm("name"),
-		Description:  c.PostForm("description"),
-		Price:        price,
-		Condition:    condition,
-		InitialStock: stock,
-		Weight:       weight,
-		StoreID:      storeID,
-		CategoryID:   category,
-	})
+	if c.PostForm("name") != item.Name {
+		/* Check and make slug
+		Initialize Model */
+		oldItem := []models.Product{}
+
+		// Get Parameter
+		slugs := slug.Make(c.PostForm("name"))
+
+		// Do Query
+		config.DB.First(&oldItem, "slug = ?", slugs)
+
+		if len(oldItem) >= 1 {
+			slugs = slugs + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+		}
+
+		config.DB.Model(&item).Where("id = ?", id).Updates(models.Product{
+			Name:         c.PostForm("name"),
+			Description:  c.PostForm("description"),
+			Slug:         slugs,
+			Price:        price,
+			Condition:    condition,
+			InitialStock: stock,
+			Weight:       weight,
+			StoreID:      storeID,
+			CategoryID:   category,
+		})
+
+	} else {
+		slugs := item.Slug
+
+		config.DB.Model(&item).Where("id = ?", id).Updates(models.Product{
+			Name:         c.PostForm("name"),
+			Description:  c.PostForm("description"),
+			Slug:         slugs,
+			Price:        price,
+			Condition:    condition,
+			InitialStock: stock,
+			Weight:       weight,
+			StoreID:      storeID,
+			CategoryID:   category,
+		})
+	}
 
 	c.JSON(200, gin.H{
 		"status": "berhasil update data product",
