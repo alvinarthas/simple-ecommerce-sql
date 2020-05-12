@@ -37,6 +37,11 @@ func RegisterStore(c *gin.Context) {
 		return
 	}
 
+	var user models.User
+	config.DB.Model(&user).Where("id = ?", userID).Updates(models.User{
+		HaveStore: true,
+	})
+
 	// I want to send email for activation
 
 	c.JSON(200, gin.H{
@@ -50,6 +55,13 @@ func GetStore(c *gin.Context) {
 	// Get Store ID from Authorization token
 	storeUsername := c.Param("username")
 
+	// Set Query Params for Filtering & Sorting
+	queryCategory := c.Query("category")
+	querySort := c.Query("sort")
+	queryPriceMin := c.Query("pricemin")
+	queryPriceMax := c.Query("pricemax")
+	queryCondition := c.Query("condition")
+
 	var itemStore models.Store
 
 	if config.DB.First(&itemStore, "user_name = ? AND is_activate = ?", storeUsername, 1).RecordNotFound() {
@@ -62,10 +74,51 @@ func GetStore(c *gin.Context) {
 
 	items := []models.Product{}
 
-	if config.DB.Find(&items, "store_id = ?", itemStore.ID).RecordNotFound() {
+	query := config.DB.Where("store_id = ?", itemStore.ID)
+
+	// Filter by Category
+	if queryCategory != "" {
+		query = query.Where("category_id = ?", queryCategory)
+	}
+
+	// Filter by Condition
+	if queryCondition != "" {
+		query = query.Where("`condition` = ?", queryCondition)
+	}
+
+	// Filter by Price
+	if queryPriceMin != "" && queryPriceMax != "" {
+		query = query.Where("price BETWEEN ? AND ?", queryPriceMin, queryPriceMax)
+	} else if queryPriceMax != "" {
+		query = query.Where("price <= ?", queryPriceMax)
+	} else if queryPriceMin != "" {
+		query = query.Where("price >= ?", queryPriceMin)
+	}
+
+	// Sorting
+	if querySort != "" {
+		if querySort == "high" {
+			query = query.Order("price desc")
+		} else if querySort == "low" {
+			query = query.Order("price desc")
+		} else if querySort == "atoz" {
+			query = query.Order("name asc")
+		} else if querySort == "ztoa" {
+			query = query.Order("name desc")
+		} else if querySort == "new" {
+			query = query.Order("id desc")
+		} else if querySort == "old" {
+			query = query.Order("id asc")
+		}
+	}
+
+	// Errors Tracing
+	errors := query.Find(&items).GetErrors()
+
+	if len(errors) > 0 {
 		c.JSON(404, gin.H{
 			"status":  "error",
-			"message": "record not found"})
+			"message": errors})
 		c.Abort()
 		return
 	}
