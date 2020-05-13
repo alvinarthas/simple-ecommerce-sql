@@ -12,3 +12,9 @@ Phase #1:
 User and Store Registration, login (normal and socialMedia Auth) and Verification
 
 Category, Product CRUD
+
+Coming Soon Phase #2:
+
+- Add to Wishlist
+- Add to Chart
+- Proceed To Transaction
