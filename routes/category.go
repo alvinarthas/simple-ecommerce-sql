@@ -1,9 +1,13 @@
 package routes
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/alvinarthas/simple-ecommerce-sql/config"
 	"github.com/alvinarthas/simple-ecommerce-sql/models"
 	"github.com/gin-gonic/gin"
+	"github.com/gosimple/slug"
 )
 
 /*
@@ -15,12 +19,46 @@ func GetAllCategories(c *gin.Context) {
 	items := []models.Category{}
 	config.DB.Find(&items)
 
+	if len(items) == 0 {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "Record Not Found"})
+		c.Abort()
+		return
+	}
+
 	// Return JSON
 	c.JSON(200, gin.H{
 		"status":  "berhasil",
 		"message": "Berhasil menampilkan semua data category",
 		"data":    items,
 	})
+}
+
+// GetCategoryProduct tp get products of the category
+func GetCategoryProduct(c *gin.Context) {
+
+	// Get Parameter
+	slug := c.Param("id")
+
+	items := []models.Product{}
+
+	// Errors Tracing
+	config.DB.Table("products").Joins("inner join categories on categories.id = products.category_id").Where("categories.slug = ?", slug).Scan(&items)
+
+	if len(items) == 0 {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "Record Not Found"})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status": "berhasil",
+		"data":   items,
+	})
+
 }
 
 // GetCategory is to get spesific product -> Store
@@ -46,12 +84,26 @@ func GetCategory(c *gin.Context) {
 
 // CreateCategory is to create new category
 func CreateCategory(c *gin.Context) {
+	/* Check and make slug
+	Initialize Model */
+	oldItem := []models.Category{}
+
+	// Get Parameter
+	slug := slug.Make(c.PostForm("name"))
+
+	// Do Query
+	config.DB.First(&oldItem, "slug = ?", slug)
+
+	if len(oldItem) >= 1 {
+		slug = slug + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
 
 	// Get Form
 	item := models.Category{
 		Name: c.PostForm("name"),
 		Desc: c.PostForm("desc"),
 		Icon: c.PostForm("icon"),
+		Slug: slug,
 	}
 
 	if err := config.DB.Create(&item).Error; err != nil {
@@ -82,11 +134,37 @@ func UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	config.DB.Model(&item).Where("id = ?", id).Updates(models.Category{
-		Name: c.PostForm("name"),
-		Desc: c.PostForm("desc"),
-		Icon: c.PostForm("icon"),
-	})
+	if c.PostForm("name") != item.Name {
+		/* Check and make slug
+		Initialize Model */
+		oldItem := []models.Category{}
+
+		// Get Parameter
+		slug := slug.Make(c.PostForm("name"))
+
+		// Do Query
+		config.DB.First(&oldItem, "slug = ?", slug)
+
+		if len(oldItem) >= 1 {
+			slug = slug + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+		}
+
+		config.DB.Model(&item).Where("id = ?", id).Updates(models.Category{
+			Name: c.PostForm("name"),
+			Desc: c.PostForm("desc"),
+			Icon: c.PostForm("icon"),
+			Slug: slug,
+		})
+	} else {
+		slug := item.Slug
+
+		config.DB.Model(&item).Where("id = ?", id).Updates(models.Category{
+			Name: c.PostForm("name"),
+			Desc: c.PostForm("desc"),
+			Icon: c.PostForm("icon"),
+			Slug: slug,
+		})
+	}
 
 	c.JSON(200, gin.H{
 		"status": "berhasil update data category",

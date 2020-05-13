@@ -9,4 +9,5 @@ type Category struct {
 	Name     string
 	Desc     string
 	Icon     string
+	Slug     string `gorm:"unique_index"`
 }

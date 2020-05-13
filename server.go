@@ -46,6 +46,7 @@ func main() {
 			// Initilize Http method for Category Crud
 			category.GET("/", routes.GetAllCategories)
 			category.GET("/:id", middleware.IsAdmin(), routes.GetCategory)
+			category.GET("/:id/product", routes.GetCategoryProduct)
 			category.POST("/create", middleware.IsAdmin(), routes.CreateCategory)
 			category.PUT("/update/:id", middleware.IsAdmin(), routes.UpdateCategory)
 			category.DELETE("/delete/:id", middleware.IsAdmin(), routes.DeleteCategory)
