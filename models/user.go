@@ -9,9 +9,9 @@ type User struct {
 	UserName          string
 	FullName          string
 	Email             string `gorm:"unique_index"`
-	Password          string
-	SocialID          string
-	Provider          string
+	Password          string `json:"-"`
+	SocialID          string `json:"-"`
+	Provider          string `json:"-"`
 	Avatar            string
 	Role              bool `gorm:"default:0"`
 	HaveStore         bool `gorm:"default:0"`
